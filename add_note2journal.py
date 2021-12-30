@@ -1,10 +1,11 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
+import os
 from datetime import date, datetime, timedelta
 import argparse
 import json
 
 from evernote.api.client import EvernoteClient
-from config import Settings
+from dotenv import load_dotenv
 
 
 WEEK_DAYS = {
@@ -24,7 +25,7 @@ def is_valid_date(text):
         return date.today() + timedelta(days=int(text))
     try:
 
-        return datetime.strptime(text, "%Y-%m-%d").date()
+        return datetime.strptime(text, '%Y-%m-%d').date()
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(text)
         raise argparse.ArgumentTypeError(msg)
@@ -38,11 +39,11 @@ if __name__ == '__main__':
                         help='date in format "YYYY-MM-DD"')
     args = parser.parse_args()
 
-    config = Settings()
+    load_dotenv()
 
     client = EvernoteClient(
-        token=config.EVERNOTE_PERSONAL_TOKEN,
-        sandbox=False # Default: True
+        token=os.environ['EVERNOTE_PERSONAL_TOKEN'],
+        sandbox=os.environ['SANDBOX'] # Default: True
     )
     noteStore = client.get_note_store()
 
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     print('Title Context is:')
     print(json.dumps(context, ensure_ascii=False, indent=4))
 
-    new_note = noteStore.copyNote(config.JOURNAL_TEMPLATE_NOTE_GUID, config.JOURNAL_NOTEBOOK_GUID)
+    new_note = noteStore.copyNote(os.environ['JOURNAL_TEMPLATE_NOTE_GUID'], os.environ['JOURNAL_NOTEBOOK_GUID'])
     utitle_without_comment = new_note.title.decode('utf8').split('#', 1)[0]
     utitle = utitle_without_comment.strip().format(**context)
     new_note.title = utitle.encode('utf8')
